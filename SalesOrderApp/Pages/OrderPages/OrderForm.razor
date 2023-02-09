@@ -1,0 +1,119 @@
+@page "/add-new-order"
+@page "/edit-order/{OrderId:int}"
+
+@inject ILogger<Order> Logger;
+@inject Services.IOrderHttpService orderHttpService;
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
+<PageTitle>Add New Order</PageTitle>
+<div class="card">
+    <div class="card-header">
+        Add New Order
+    </div>
+    <div class="card-body">
+        <EditForm EditContext="@editContext" HandleSubmit="@HandleSubmit">
+            <ObjectGraphDataAnnotationsValidator></ObjectGraphDataAnnotationsValidator>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <InputText id="name" @bind-Value="@order.Name" class="form-control form-control-sm"></InputText>
+                        <label for="Name">Name</label>
+                        <ValidationMessage For="@(() => order.Name)" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <InputText id="state" @bind-Value="@order.State" class="form-control form-control-sm">
+                        </InputText>
+                        <label for="State">State</label>
+                        <ValidationMessage For="@(() => order.State)" />
+                    </div>
+                </div>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <span class="btn btn-sm btn-outline-success mt-3 mb-3 float-end" @onclick="@AddNewWindow">Add
+                        Window</span>
+                </div>
+                <WindowsComponent Windows="@order.Windows"></WindowsComponent>
+            </div>
+            <br>
+            <button type="submit" class="btn btn-outline-success col-md-4" @onclick="@HandleSubmit">Save</button>
+        </EditForm>
+    </div>
+
+</div>
+
+@code {
+    [Inject] private IDispatcher dispatcher { get; set; }
+    [Inject] IState<OrderState> OrderState { get; set; }
+
+    private Order order { get; set; }
+    public EditContext editContext { get; set; }
+    [Inject]
+    public IJSRuntime Js { get; set; } = default!;
+    [Parameter]
+    public int? OrderId { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (OrderId != null)
+        {
+            await orderHttpService.GetAsync(OrderId);
+            order = OrderState.Value.Order;
+            editContext = new EditContext(order);
+        }
+    }
+    protected override void OnInitialized()
+    {
+        order = OrderState.Value.Order;
+        editContext = new EditContext(order);
+    }
+
+    private async Task HandleSubmit()
+    {
+
+        await Js.LogAsync(editContext.Model);
+        if (editContext.Validate())
+        {
+            if (OrderId == null)
+            {
+                var res = await orderHttpService.AddAsync(order);
+                if (res)
+                {
+                    await JsRuntime.InvokeVoidAsync("alert", "Order Added!");
+                    NavigationManager.NavigateTo("/order-list");
+                }
+                else
+                    await JsRuntime.InvokeVoidAsync("alert", "Order Add Failed!");
+
+            }
+            else
+            {
+                var res = await orderHttpService.EditAsync(order);
+                if (res)
+                {
+                    await JsRuntime.InvokeVoidAsync("alert", "Order Updated!");
+                    NavigationManager.NavigateTo("/order-list");
+                }
+
+                else
+                    await JsRuntime.InvokeVoidAsync("alert", "Order Update Failed!");
+
+            }
+
+            Logger.LogInformation($"form submitted :{order}:");
+            Logger.LogInformation("valid form submitted");
+        }
+        else
+        {
+            Logger.LogInformation("invalid form submitted");
+        }
+        
+    }
+
+    private void AddNewWindow()
+    {
+        dispatcher.Dispatch(new AddNewWindowAction(new Window()));
+    }
+
+
+}

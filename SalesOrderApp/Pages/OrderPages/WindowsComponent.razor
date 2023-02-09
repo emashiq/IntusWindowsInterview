@@ -1,0 +1,45 @@
+    @foreach (var item in Windows)
+    {
+        <div class="mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <span class="h6" >
+                        Window - Sub-elements (@item.SubElements.Count())
+                    </span>
+                    <span class="btn btn-sm btn-outline-danger float-end" @onclick="() => RemoveWindows(item)">X</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md">
+                            <div class="form-floating">
+                                <InputText @bind-Value="@item.Name" class="form-control" placeholder="Name"></InputText>
+                                <label>Name</label>
+                                 <ValidationMessage For="@(() => item.Name)" />
+                            </div>
+                        </div>
+                        <div class="col-md">
+                            <div class="form-floating">
+                                <InputNumber @bind-Value="@item.QuantityOfWindows" class="form-control"
+                                    placeholder="Quantity"></InputNumber>
+                                <label>Quantity</label>
+                                 <ValidationMessage For="@(() => item.QuantityOfWindows)" />
+                            </div>
+                        </div>
+                    </div>
+                    <SubElementComponent SubElements="@item.SubElements" WindowIndex="Windows.IndexOf(item)"  AddSubElementEvent="() => AddNewSubElement(Windows.IndexOf(item))"></SubElementComponent>
+                </div>
+            </div>
+        </div>
+    }
+
+@code {
+    [Parameter] public List<Window> Windows { get; set; }
+    [Inject] private IDispatcher dispatcher { get; set; }
+    private void RemoveWindows(Window window){
+        dispatcher.Dispatch(new RemoveWindowAction(window));
+    }
+    private void AddNewSubElement(int index)
+    {
+        dispatcher.Dispatch(new AddNewSubElementAction(new SubElement(), index));
+    }
+}

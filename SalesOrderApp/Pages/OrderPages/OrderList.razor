@@ -1,0 +1,96 @@
+@page "/order-list"
+@inject Services.IOrderHttpService _orderHttpService;
+@using Newtonsoft.Json;
+<PageTitle>Order List</PageTitle>
+
+<div class="row">
+    <div class="col-md-4">
+        <h3 class="d-flex justify-content-start">Order List</h3>
+    </div>
+    <div class="col-md-8">
+        <NavLink href="/add-new-order" class="btn btn-outline-info float-end">Add New Order</NavLink>
+    </div>
+    <div class="col-md-12">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>State</th>
+                    <th>Windows Count</th>
+                    <th colspan="2"> </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (orders == null)
+                {
+                    <tr>
+                        <td colspan="3">Loading ...</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var order in orders)
+                    {
+                        <tr>
+                            <td>
+                                @order.Name
+                            </td>
+                             <td>
+                                @order.State
+                            </td>
+                             <td>
+                                @order.TotalWindows
+                            </td>
+                            <td colspan="2">
+                                <a href="/edit-order/@order.Id" class="btn-sm btn-secondary" style="text-decoration: none;">Edit</a>
+                                <a href="javascript:void(0)" class="btn-sm btn-danger" style="text-decoration: none;" @onclick="() =>
+                                OpenDialog(order.Id)">Delete</a>
+                            </td>
+
+                        </tr>
+                    }
+                }
+
+            </tbody>
+        </table>
+    </div>
+</div>
+@if (DialogIsOpen)
+{
+   <Dialog Caption="Delete an author"
+           Message="Do you want to delete the order?"
+           OnClose="@OnDialogClose"
+           Type="Dialog.Category.DeleteNot">
+   </Dialog>
+}
+@code{
+
+    [Inject] IState<OrderListState> orderListState { get; set; }
+    public List<Order> orders { get; set; }
+    private bool DialogIsOpen = false;
+    private int? OrderId;
+    protected override async Task OnInitializedAsync()
+    {
+        await _orderHttpService.GetAsync();
+        orders = orderListState.Value.Orders;
+    }
+    private void OpenDialog(int? id)
+    {
+        DialogIsOpen = true;
+        OrderId = id;
+    }
+    private async Task OnDialogClose(bool isOk)
+    {
+        if (isOk)
+        {
+            var res = await _orderHttpService.DeleteAsync(OrderId);
+            if(res)
+            {
+                orders = orders.Where(w => w.Id != OrderId).ToList();
+            }
+
+        }
+        DialogIsOpen = false;
+    }
+
+}

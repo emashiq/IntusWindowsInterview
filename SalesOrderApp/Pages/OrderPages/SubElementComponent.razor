@@ -1,0 +1,66 @@
+<table class="table table-striped table-responsive table-bordered mt-3">
+    <thead>
+        <tr>
+            <th colspan="5">
+                <span>Sub-Elements</span>
+                <span class="btn btn-sm btn-outline-success float-end"
+                    @onclick="() => AddSubElementEvent.InvokeAsync()">Add
+                    Sub-Element</span>
+            </th>
+        </tr>
+        <tr>
+            <th>
+                Element
+            </th>
+            <th>
+                Type
+            </th>
+            <th>
+                Width
+            </th>
+            <th>
+                Width
+            </th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (SubElement item in SubElements)
+        {
+            <tr>
+                <td>
+                    <InputNumber @bind-Value="@item.Element" class="form-control form-control-sm"></InputNumber>
+                                <ValidationMessage For="@(() => item.Element)" />
+                </td>
+                <td>
+                    <InputText @bind-Value="item.Type" class="form-control form-control-sm"></InputText>
+                    <ValidationMessage For="@(() => item.Type)" />
+                </td>
+                <td>
+                    <InputNumber @bind-Value="@item.Width" class="form-control form-control-sm"></InputNumber>
+                    <ValidationMessage For="@(() => item.Width)" />
+                </td>
+                <td>
+                    <InputNumber @bind-Value="@item.Height" class="form-control form-control-sm"></InputNumber>
+                    <ValidationMessage For="@(() => item.Height)" />
+                </td>
+                <td>
+                    <span class="btn btn-sm btn-outline-danger"
+                    @onclick="() => RemoveSubElementFromWindow(item)">X</span>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@code {
+    [Inject] IDispatcher dispatcher { get; set; }
+    [Parameter] public List<SubElement> SubElements { get; set; }
+    [Parameter] public int WindowIndex { get; set; }
+    [Parameter] public EventCallback AddSubElementEvent { get; set; }
+    private void RemoveSubElementFromWindow(SubElement element)
+    {
+        dispatcher.Dispatch(new RemoveSubElementAction(WindowIndex, element));
+    }
+}
