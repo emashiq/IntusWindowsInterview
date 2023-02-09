@@ -21,7 +21,7 @@ builder.Services.AddAutoMapper(typeof(OrderProfile));
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(allowAllOrigin,
-        builder => builder.WithOrigins("http://localhost:5250")
+        builder => builder.AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
